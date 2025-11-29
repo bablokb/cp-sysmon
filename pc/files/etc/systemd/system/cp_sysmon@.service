@@ -1,0 +1,20 @@
+# --------------------------------------------------------------------------
+# Systemd service Definition for cp_sysmon@.service
+#
+# The service just starts the script /usr/local/sbin/cp_sysmon.py. It is
+# triggered by the udev-rule 99-cp_sysmon.rules
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/cp-sysmon
+# ---------------------------------------------------------------------------
+
+[Unit]
+Description=cp_sysmon script
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cp_sysmon.py %I

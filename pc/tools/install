@@ -1,0 +1,35 @@
+#!/bin/bash
+# ---------------------------------------------------------------------------
+# This script installs files and services specific to the project.
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/cp-sysmon
+# ---------------------------------------------------------------------------
+
+PROJECT="cp_sysmon"
+
+# --- install specific files   ----------------------------------------------
+
+install_files() {
+  echo -e "[INFO] installing project files" 2>&1
+
+  for f in `find $(dirname "$0")/../files/ -type f -not -name "*.pyc"`; do
+    target="${f#*files}"
+    target_dir="${target%/*}"
+    [ ! -d "$target_dir" ] && mkdir -p "$target_dir"
+    cp "$f" "$target"
+    chown root:root "$target"
+  done
+
+  chmod 755 "/usr/local/bin/$PROJECT"
+  chmod 644 "/etc/udev/rules.d/99-$PROJECT.rules"
+  chmod 644 "/etc/systemd/system/$PROJECT@.service"
+}
+
+# --- main program   --------------------------------------------------------
+
+install_files
+
+echo "[INFO] installation completed"

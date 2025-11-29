@@ -1,0 +1,15 @@
+# ---------------------------------------------------------------------------
+# Run a script (using a systemd-service) after plugin of a device.
+#
+# Running the script directly fails, since udev only allows short-running scripts.
+#
+# Run "sudo udevadm monitor -s tty --environment" and plug in your device. This
+# should tell you the value of ID_SERIAL_SHORT.
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/cp-sysmon
+# ---------------------------------------------------------------------------
+
+KERNEL=="ttyACM*", SUBSYSTEM=="tty", ACTION=="add", ENV{ID_SERIAL_SHORT}=="DE62A87557822C2A",ENV{ID_USB_INTERFACE_NUM}=="02", RUN+="/bin/systemctl --no-block start cp_sysmon@$kernel.service"
