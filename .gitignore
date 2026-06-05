@@ -6,4 +6,5 @@ mcu/lib/adafruit*
 *secrets.py
 __pycache__
 settings.py
+config.py
 .venv*
