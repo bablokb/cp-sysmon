@@ -4,7 +4,7 @@ Small System Performance-Monitor
 This project implements a plugable performance monitor for PCs.
 The datacollector is a small Python script running on the PC collecting
 data and sending them using UART over USB. The monitor itself is a
-microcontroller (e.g. Raspberry Pi Pico) with a attached display. The
+microcontroller (e.g. Raspberry Pi Pico) with an attached display. The
 MCU reads the data from the serial connection and does all the
 presentation work.
 
@@ -106,16 +106,22 @@ these libraries, e.g.:
 MCU-Configuration
 -----------------
 
-You need to configure the display driver for the display that is attached
-to the MCU. You can do this directly in `main.py`. The file has some
-ready to use examples. Adapt these for your needs. The image on top is
-for the Waveshare RP2040-Geek (with integrated Pico and ST7789 display).
-A second example is for the Waveshare Res-Touch-LCD-2.8". This display
-has sockets for Pico underneath.
+You need to configure some basic settings and the display driver for
+the display that is attached to the MCU. `main.py` reads the
+configuration from `config.py`. Copy one of the existing examples
+`mcu/config_*` to `mcu/config.py` and adapt the settings and the
+driver for your needs.
+
+The file `mcu/config_st7789_240x135.py` is for the Waveshare
+RP2040-Geek (with integrated Pico and ST7789 display), see the image
+above. The file `mcu/config_waveshare_res_touch_28.py` is for the
+Waveshare Res-Touch-LCD-2.8". This display has sockets for a Pico
+underneath.
 
 ![](./waveshare-res-touch-lcd-2.8.jpg)
 
-As this display is quiete large, it would be suitable to display more data.
+As this display is quiete large, it would be suitable to display more
+data.
 
 
 Hacking
