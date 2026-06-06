@@ -32,24 +32,26 @@ import config
 
 # --- system statistics configuration   ----------------------------------------
 
-BAR_N      =   4  # cpu, memory, disk, temperature
+# Note: this is the default configuration. The connected host can override
+#       this configuration. See the Readme for details.
 
-formats = ["CPU:", "{0:.1f}%",
-           "Mem:", "{0:.1f}%",
-           "Disk:","{0:.1f}%",
-           "Temp:","{0}°C",]
-ranges = [
-  (0,100),
-  (0,100),
-  (0,100),
-  (35,85),
-  ]
-colors = [
-  [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
-  [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
-  [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
-  [(Color.GREEN,65),(Color.YELLOW,80),(Color.RED,None)],
-  ]
+CONFIG_UI = {
+  'labels':  ["CPU:",     "Mem:",     "Disk:",    "Temp:"],
+  'formats': ["{0:.1f}%", "{0:.1f}%", "{0:.1f}%", "{0}°C"],
+  'ranges':  [(0,100),    (0,100),    (0,100),    (35,85)],
+  'colors':  [
+    [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
+    [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
+    [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
+    [(Color.GREEN,65),(Color.YELLOW,80),(Color.RED,None)],
+    ],
+  }
+
+# TODO: create after reading config from host!
+n_bars  = len(CONFIG_UI['labels'])
+formats = zip(CONFIG_UI['labels'], CONFIG_UI['formats'])
+ranges  = CONFIG_UI['ranges']
+colors  = CONFIG_UI['colors']
 
 # --- helpers for system statistics   ----------------------------------------
 
@@ -91,10 +93,10 @@ def get_data():
 
 config.display.auto_refresh=False
 
-bars = [None]*BAR_N
-for i in range(BAR_N):
+bars = [None]*n_bars
+for i in range(n_bars):
   bars[i] = (0,2*i+1,DataBar(size=(config.BAR_WIDTH,
-                                   config.BAR_HEIGHT),range=(0,100),
+                                   config.BAR_HEIGHT),range=ranges[i],
                              format=formats[2*i+1],
                              color=colors[i],
                              text_color=Color.AQUA,
@@ -102,9 +104,9 @@ for i in range(BAR_N):
                              font=config.FONT,
                              bg_color=Color.BLACK))
 
-# create view with BAR_N rows (right align labels)
+# create view with n_bars rows (right align labels)
 view = DataView(
-  dim=(BAR_N,2),
+  dim=(n_bars,2),
   width=config.display.width,height=config.display.height,
   justify=Justify.RIGHT,
   fontname=config.FONT,
@@ -118,7 +120,7 @@ view = DataView(
 )
 
 # left align hbars
-for index in range(1,2*BAR_N,2):
+for index in range(1,2*n_bars,2):
   view.justify(Justify.LEFT,index=index)
 
 config.display.root_group = view
