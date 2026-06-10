@@ -26,14 +26,14 @@ class UIConfig:
 
   def __init__(self):
     """ constructor """
-    self.labels  = ["CPU:",     "Mem:",     "Disk:",    "Temp:"],
-    self.formats = ["{0:.1f}%", "{0:.1f}%", "{0:.1f}%", "{0}°C"],
-    self.ranges  = [(0,100),    (0,100),    (0,100),    (35,85)],
+    self.labels  = ["CPU:",     "Temp:", "Mem:",     "Disk:"],
+    self.formats = ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
+    self.ranges  = [(0,100),    (35,85), (0,100),    (0,100)],
     self.colors  = [
       [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
-      [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
-      [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
       [(Color.GREEN,65),(Color.YELLOW,80),(Color.RED,None)],
+      [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
+      [(Color.GREEN,70),(Color.YELLOW,85),(Color.RED,None)],
     ]
     self.n_bars = 4
     self.view = None
