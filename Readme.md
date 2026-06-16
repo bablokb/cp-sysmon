@@ -35,6 +35,36 @@ to `/usr/local/bin/cp_sysmon.py`, the udev-rule to
 PC-Configuration
 ----------------
 
+The configuration file for cp-sysmon is `/etc/cp_sysmon.json`. The install
+routine above creates a default version:
+
+```
+{
+  "#": [
+     "Unknown keys are ignored and treated as comments",
+     "This json-file reproduces the defaults.",
+     "All keys below are mandatory if this file exists.",
+     "UI_CONFIG can be an empty string for the default configuration."
+       ],
+  "BAUD": 115200,
+  "CPU_TEMP_LABEL": "CPU",
+  "DISK_MOUNTS": ["/"],
+  "INTERVAL": 1,
+  "UI_CONFIG": {
+    "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
+    "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
+    "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
+    "colors" : [
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
+      [["0x008000",65],["0xFFFF00",80],["0xFF0000",null]],
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]]
+    ]
+  }
+}
+
+```
+
 Although psutil hides most of the specifics of performance data, there is
 one important exception: CPU-temperature. A PC has many sensors and the
 exact label of the CPU-temperature varies. To find out the correct label,
@@ -46,22 +76,32 @@ run
 
 The output is not very readable but you should identify various components
 of your PC, e.g. NVMe disks, PCIe bridges or the system itself. Check
-which label is most suitable and update `/usr/local/bin/cp_sysmon.py`
-accordingly:
+which label is most suitable and update `CPU_TEMP_LABEL` within
+`/etc/cp_sysmon.json`.
 
-    BAUD = 115200          # communication speed on serial
-    CPU_TEMP_LABEL = 'CPU' # depends on the system
-    DISK_MOUNT = '/'       # depends on preferences
-    INTERVAL = 1           # depends on update speed of display partner program
+The second thing to update are the disk-mount(s), unless you are happy with
+the default value. If you have more than a single disk-mount to monitor,
+you must also update the `UI_CONFIG` accordingly, i.e. add additional
+items to the given lists.
 
-The second thing to update is the disk-mount, unless you are happy with
-the default value. The `INTERVAL` value defines the data-sampling interval.
+The `INTERVAL` value defines the data-sampling interval.
 Sampling more often than once per second might lead to problems if the
 MCU cannot process the data in a timely manner.
 
+The `UI_CONFIG` value is a dict that the system sends to the MCU. `labels`
+and `formats` should be self explanatory. `ranges` define the expected
+ranges for values and are used for scaling the visual representation.
+`colors` are lists that map values to colors: e.g. (first line):
+a cpu-value of up to 70% is mapped to "0x008000" (green), values between
+70% and 85% are mapped to "0xFFFF00" (yellow) and values above are
+mapped to red ("0xFF0000").
 
-Configuriong Automatic Start
-----------------------------
+Note that if you add more statistics (besides more disk-mounts) you also
+have to adapt the collector script (see section "Hacking" below).
+
+
+Configuring Automatic Start
+---------------------------
 
 Besides the data collecter script, you should also update the udev-rule
 installed by the install-script. This rule automatically starts the
@@ -135,14 +175,16 @@ In the collector script (`/usr/local/bin/cp_sysmon.py`), just add more
 items to the data-object:
 
     data = [f"{psutil.cpu_percent()}",
-            f"{psutil.virtual_memory().percent}",
-            f"{psutil.disk_usage(DISK_MOUNT).percent}",
-            f"{get_temp()}"]
+            f"{get_temp()}",
+            f"{psutil.virtual_memory().percent}"]
+    for mnt in cfg.DISK_MOUNTS:
+      data.append(f"{psutil.disk_usage(mnt).percent}")
 
-In the mcu script (`main.py`), adapt the list below "systems statistics
-configuration".
+Adding more endpoints also needs an adaption of `UI_CONFIG` in
+`/etc/cp_sysmon.json` as described above.
 
 Another option would be to add data-logging. Many displays already have
 an integrated SD-card slot, so besides live display of performance data
 the system could also log them to a SD-card. This is not implemented yet,
-pull requests are welcome.
+pull requests are welcome. For performance reasons data-logging is best
+done directly on the host though.

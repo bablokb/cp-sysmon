@@ -23,28 +23,21 @@ config_ui = UIConfig()             # single global UI configuration object
 
 # --- helpers for system statistics   ----------------------------------------
 
-_usb_serial = None
-_uart = None
+_reader = None
 data_source = getattr(config,"DATA_SOURCE","usb")
 
-def get_data_usb():
-  """ read data from USB """
-  global _usb_serial
-  if not _usb_serial:
+def init_serial():
+  """ initialize of serial """
+  global _reader
+  if data_source == 'usb':
     import usb_cdc
     if not usb_cdc.data:
       raise ValueError("need to enable usb_cdc.data in boot.py!")
     else:
-      _usb_serial = usb_cdc.data
-  return _usb_serial.readline()
-
-def get_data_uart():
-  """ read data from UART """
-  global _uart
-  if not _uart:
-    _uart = busio.UART(data_source[1], data_source[0],
-                       baudrate=115200)
-   return _uart.readline()
+      _reader = usb_cdc.data
+  else:
+    _reader = busio.UART(data_source[1], data_source[0],
+                         baudrate=115200)
 
 def get_data():
   """ read data from data-source """
@@ -53,10 +46,7 @@ def get_data():
   line = '#'
   cfg = ''
   while line[0] == '#':
-    if data_source == 'usb':
-      line = get_data_usb()
-    else:
-      line = get_data_uart()
+    line = _reader.readline().decode()
     if line[0] == '#':
       # add configuration line to config (skip comments)
       if line[1:] and line[1:][0] != '#':
@@ -64,18 +54,19 @@ def get_data():
     else:
       # a real data line, so break
       break
-  if config:
+  if cfg:
     # update configuration and ui-objects
     config_ui.parse(cfg)
 
   # parse data
-  data = line.decode().strip('\n').split(',')
+  data = line.strip('\n').split(',')
   data = [float(d) for d in data]
-  return [val for pair in zip([None]*4, data) for val in pair]
+  return [val for pair in zip([None]*len(data), data) for val in pair]
   return data
 
 # --- main loop   ------------------------------------------------------------
 
+init_serial()
 while True:
   values = get_data()
   if not config_ui.view:

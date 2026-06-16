@@ -1,0 +1,23 @@
+{
+  "#": [
+     "Unknown keys are ignored and treated as comments",
+     "This json-file reproduces the defaults.",
+     "All keys below are mandatory if this file exists.",
+     "UI_CONFIG can be an empty string for the default configuration."
+       ],
+  "BAUD": 115200,
+  "CPU_TEMP_LABEL": "CPU",
+  "DISK_MOUNTS": ["/"],
+  "INTERVAL": 1,
+  "UI_CONFIG": {
+    "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
+    "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
+    "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
+    "colors" : [
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
+      [["0x008000",65],["0xFFFF00",80],["0xFF0000",null]],
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
+      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]]
+    ]
+  }
+}

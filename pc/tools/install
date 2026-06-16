@@ -15,6 +15,12 @@ PROJECT="cp_sysmon"
 install_files() {
   echo -e "[INFO] installing project files" 2>&1
 
+  rand="$RANDOM"
+  if [ -f /etc/${PROJECT}.json ]; then
+    # save current configuration
+    mv /etc/${PROJECT}.json /etc/${PROJECT}.json.$rand
+  fi
+
   for f in `find $(dirname "$0")/../files/ -type f -not -name "*.pyc"`; do
     target="${f#*files}"
     target_dir="${target%/*}"
@@ -24,8 +30,16 @@ install_files() {
   done
 
   chmod 755 "/usr/local/bin/$PROJECT"
+  chmod 644 "/etc/$PROJECT.json"
   chmod 644 "/etc/udev/rules.d/99-$PROJECT.rules"
   chmod 644 "/etc/systemd/system/$PROJECT@.service"
+
+  # restore old configuration
+  if [ -f /etc/${PROJECT}.json.$rand ]; then
+    mv -f /etc/${PROJECT}.json /etc/${PROJECT}.json.new
+    mv /etc/${PROJECT}.json.$rand /etc/${PROJECT}.json
+    echo -e "\nnew version of configuration file: /etc/${PROJECT}.json.new"
+  fi
 }
 
 # --- main program   --------------------------------------------------------

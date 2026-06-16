@@ -10,26 +10,38 @@
 # Website: https://github.com/bablokb/cp-sysmon
 # ---------------------------------------------------------------------------
 
-import serial
-import psutil
-import time
+import json
 import os
+import psutil
+import serial
 import sys
+import time
 
-BAUD = 115200          # communication speed on serial
-CPU_TEMP_LABEL = 'CPU' # depends on the system
-DISK_MOUNT = '/'       # depends on preferences
-INTERVAL = 1           # depends on update speed of display partner program
+# --- read configuration from /etc/cp_sysmon.json   -------------------------
+
+try:
+  f = open("/etc/cp_sysmon.json")
+  cfg = json.load(f)
+  f.close()
+except:
+  cfg = {
+    'BAUD': 115200,            # communication speed on serial
+    'CPU_TEMP_LABEL': 'CPU',   # depends on the system
+    'DISK_MOUNTS': ['/'],      # depends on preferences
+    'INTERVAL': 1,             # depends on update speed of display partner program
+    'UI_CONFIG': ''            # UI configuration
+    }
 
 def get_temp():
   """ return CPU-temperature """
   temps = psutil.sensors_temperatures()
   for hw in temps.values():
     for value in hw:
-      if value.label == CPU_TEMP_LABEL:
+      if value.label == cfg["CPU_TEMP_LABEL"]:
         return int(round(value.current,0))
   return 0
 
+#print(f"ui_config: {cfg['UI_CONFIG']}")
 if len(sys.argv) < 2:
   port = "/dev/ttyACM1"
 else:
@@ -43,20 +55,31 @@ while True:
   # wait for serial device
   while ser is None and not os.path.exists(port):
     print(f"waiting for {port}") 
-    time.sleep(INTERVAL)
+    time.sleep(cfg["INTERVAL"])
+
   # create serial
   if ser is None:
     time.sleep(0.25)                # give udev time to set permissions
-    ser = serial.Serial(port,BAUD)
+    ser = serial.Serial(port,cfg["BAUD"])
     print(f"serial device created")
+
+    # send UI configuration
+    if cfg["UI_CONFIG"]:
+      try:
+        ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n","UTF-8"))
+      except Exception as ex:
+        print(f"failed to write UI_CONFIG: {ex}")
+
+  # query and send data
   data = [f"{psutil.cpu_percent()}",
-          f"{psutil.virtual_memory().percent}",
-          f"{psutil.disk_usage(DISK_MOUNT).percent}",
-          f"{get_temp()}"]
+          f"{get_temp()}",
+          f"{psutil.virtual_memory().percent}"]
+  for mnt in cfg["DISK_MOUNTS"]:
+    data.append(f"{psutil.disk_usage(mnt).percent}")
   #print(f"{data=}")
   try:
     ser.write(bytes(f"{','.join(data)}\n",'UTF-8'))
   except:
     ser.close()
     ser = None
-  time.sleep(INTERVAL)
+  time.sleep(cfg["INTERVAL"])

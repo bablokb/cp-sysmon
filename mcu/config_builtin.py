@@ -26,3 +26,4 @@ from dataviews.Base import Color
 # --- display creation   ------------------------------------------------------
 
 display = board.DISPLAY
+display.auto_refresh = False
