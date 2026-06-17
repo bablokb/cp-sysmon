@@ -29,7 +29,7 @@ install_files() {
     chown root:root "$target"
   done
 
-  chmod 755 "/usr/local/bin/$PROJECT"
+  chmod 755 "/usr/local/bin/$PROJECT.py"
   chmod 644 "/etc/$PROJECT.json"
   chmod 644 "/etc/udev/rules.d/99-$PROJECT.rules"
   chmod 644 "/etc/systemd/system/$PROJECT@.service"
