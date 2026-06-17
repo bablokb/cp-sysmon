@@ -25,7 +25,7 @@ from dataviews.Base import Color
 
 # --- display configuration   ------------------------------------------------
 
-WIDTH      = 329
+WIDTH      = 320
 HEIGHT     = 170
 ROTATION   =  90
 ROW_START  = 0
@@ -58,5 +58,5 @@ if display is None:
   _spi    = busio.SPI(clock=PIN_SCLK,MOSI=PIN_MOSI)
   _bus = fourwire.FourWire(_spi,command=PIN_DC,chip_select=PIN_CS,
                            reset=PIN_RST, baudrate=BAUDRATE)
-  display = ST7789(_bus,**_kwargs)
+  display = ST7789(_bus, width=WIDTH, height=HEIGHT, **_kwargs)
   display.auto_refresh = False
