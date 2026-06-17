@@ -54,5 +54,5 @@ if display is None:
   _spi    = busio.SPI(clock=PIN_SCLK,MOSI=PIN_MOSI)
   _bus = fourwire.FourWire(_spi,command=PIN_DC,chip_select=PIN_CS,
                            reset=PIN_RST)
-  display = ST7789(_bus,**_kwargs)
+  display = ST7789(_bus, width=WIDTH, height=HEIGHT, **_kwargs)
   display.auto_refresh = False
