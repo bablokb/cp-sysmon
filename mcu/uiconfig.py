@@ -73,7 +73,7 @@ class UIConfig:
     border     = getattr(config,"BORDER", 1)
     padding    = getattr(config,"PADDING", 3)
     divider    = getattr(config,"DEVIDER", 1)
-    bar_width  = getattr(config,"BAR_WIDTH", int(0.75*config.display.width))
+    bar_width  = getattr(config,"BAR_WIDTH", int(0.67*config.display.width))
     bar_height = getattr(config,"BAR_HEIGHT",
                          int((config.display.height - 2*border -
                               (n_bars-1)*divider -
