@@ -14,6 +14,7 @@
 # ----------------------------------------------------------------------------
 
 import busio
+import time
 
 # --- hardware and UI configuration   ----------------------------------------
 
@@ -68,8 +69,10 @@ def get_data():
 
 init_serial()
 while True:
+  start = time.monotonic()
   values = get_data()
   if not config_ui.view:
     config_ui.create_view()
   config_ui.view.set_values(values)
   config.display.refresh()
+  #print(f"{time.monotonic()-start:0.1f}")  # show framerate
