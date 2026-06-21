@@ -24,20 +24,20 @@ config_ui = UIConfig()             # single global UI configuration object
 
 # --- helpers for system statistics   ----------------------------------------
 
-_reader = None
+_serial = None
 data_source = getattr(config,"DATA_SOURCE","usb")
 
 def init_serial():
   """ initialize of serial """
-  global _reader
+  global _serial
   if data_source == 'usb':
     import usb_cdc
     if not usb_cdc.data:
       raise ValueError("need to enable usb_cdc.data in boot.py!")
     else:
-      _reader = usb_cdc.data
+      _serial = usb_cdc.data
   else:
-    _reader = busio.UART(data_source[1], data_source[0],
+    _serial = busio.UART(data_source[1], data_source[0],
                          baudrate=115200)
 
 def get_data():
@@ -47,7 +47,7 @@ def get_data():
   line = '#'
   cfg = ''
   while line[0] == '#':
-    line = _reader.readline().decode()
+    line = _serial.readline().decode()
     if line[0] == '#':
       # add configuration line to config (skip comments)
       if line[1:] and line[1:][0] != '#':
