@@ -58,6 +58,9 @@ def get_data():
   if cfg:
     # update configuration and ui-objects
     config_ui.parse(cfg)
+    config_ui.create_view()
+    _serial.write(b"READY\r\n")
+    _serial.flush()
 
   # parse data
   data = line.strip('\n').split(',')
@@ -71,8 +74,7 @@ init_serial()
 while True:
   start = time.monotonic()
   values = get_data()
-  if not config_ui.view:
-    config_ui.create_view()
-  config_ui.view.set_values(values)
-  config.display.refresh()
+  if config_ui.view:
+    config_ui.view.set_values(values)
+    config.display.refresh()
   #print(f"{time.monotonic()-start:0.1f}")  # show framerate
