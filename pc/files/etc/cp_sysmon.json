@@ -6,7 +6,7 @@
      "UI_CONFIG can be an empty string for the default configuration."
        ],
   "BAUD": 115200,
-  "CPU_TEMP_LABEL": "CPU",
+  "TEMP": ["thinkpad", "CPU"],
   "DISK_MOUNTS": ["/"],
   "INTERVAL": 1,
   "UI_CONFIG": {

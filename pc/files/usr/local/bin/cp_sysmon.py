@@ -25,21 +25,24 @@ try:
   f.close()
 except:
   cfg = {
-    'BAUD': 115200,            # communication speed on serial
-    'CPU_TEMP_LABEL': 'CPU',   # depends on the system
-    'DISK_MOUNTS': ['/'],      # depends on preferences
-    'INTERVAL': 1,             # depends on update speed of display partner program
-    'UI_CONFIG': ''            # UI configuration
+    'BAUD': 115200,                          # communication speed on serial
+    'TEMP': ('thinkpad', 'CPU'),             # depends on the system
+    'DISK_MOUNTS': ['/'],                    # depends on preferences
+    'INTERVAL': 1.5,                         # depends on speed of MCU
+    'UI_CONFIG': ''                          # UI configuration
     }
 
 def get_temp():
   """ return CPU-temperature """
-  temps = psutil.sensors_temperatures()
-  for hw in temps.values():
-    for value in hw:
-      if value.label == cfg["CPU_TEMP_LABEL"]:
+  try:
+    name, label = cfg["TEMP"]
+    component = psutil.sensors_temperatures()[name]
+    for value in component:
+      if value.label == label:
         return int(round(value.current,0))
-  return 0
+    return 0
+  except:
+    return 0
 
 #print(f"ui_config: {cfg['UI_CONFIG']}")
 if len(sys.argv) < 2:
