@@ -63,13 +63,19 @@ while True:
   # create serial
   if ser is None:
     time.sleep(0.25)                # give udev time to set permissions
-    ser = serial.Serial(port,cfg["BAUD"])
+    ser = serial.Serial(port,cfg["BAUD"], timeout=1)
     print(f"serial device created")
 
     # send UI configuration
     if cfg["UI_CONFIG"]:
       try:
         ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n","UTF-8"))
+        start = time.monotonic()
+        while True:
+          resp = ser.readline().decode('utf-8')
+          if resp == "READY\n":
+            print(f"MCU ready after {time.monotonic()-start:0.1f}s")
+            break
       except Exception as ex:
         print(f"failed to write UI_CONFIG: {ex}")
 
