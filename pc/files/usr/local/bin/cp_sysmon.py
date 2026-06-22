@@ -44,6 +44,20 @@ def get_temp():
   except:
     return 0
 
+# --- wait for MCU   ---------------------------------------------------------
+
+def wait_for_mcu(ser):
+  """ wait until MCU signal ready """
+  print("waiting for MCU...")
+  start = time.monotonic()
+  while True:
+    resp = ser.readline().decode('utf-8')
+    if resp == "READY\n":
+      print(f"MCU ready after {time.monotonic()-start:0.1f}s")
+      return
+
+# --- main   -----------------------------------------------------------------
+
 #print(f"ui_config: {cfg['UI_CONFIG']}")
 if len(sys.argv) < 2:
   port = "/dev/ttyACM1"
@@ -55,6 +69,7 @@ else:
 print(f"using port {port}")
 ser = None
 while True:
+  start = time.monotonic()
   # wait for serial device
   while ser is None and not os.path.exists(port):
     print(f"waiting for {port}") 
@@ -65,19 +80,22 @@ while True:
     time.sleep(0.25)                # give udev time to set permissions
     ser = serial.Serial(port,cfg["BAUD"], timeout=1)
     print(f"serial device created")
+    ser.write(bytes("START\n","UTF-8"))
+    wait_for_mcu(ser)
 
     # send UI configuration
     if cfg["UI_CONFIG"]:
       try:
-        ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n","UTF-8"))
-        start = time.monotonic()
-        while True:
-          resp = ser.readline().decode('utf-8')
-          if resp == "READY\n":
-            print(f"MCU ready after {time.monotonic()-start:0.1f}s")
-            break
+        print("sending ui-configuration to MCU...")
+        ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n\n","UTF-8"))
+        wait_for_mcu(ser)
       except Exception as ex:
         print(f"failed to write UI_CONFIG: {ex}")
+    else:
+      # send dummy line and wait
+      print("sending no configuration to MCU...")
+      ser.write(bytes("\n","UTF-8"))
+      wait_for_mcu(ser)
 
   # query and send data
   data = [f"{psutil.cpu_percent()}",
@@ -91,4 +109,7 @@ while True:
   except:
     ser.close()
     ser = None
-  time.sleep(cfg["INTERVAL"])
+  time.sleep(max(0,
+                 cfg["INTERVAL"]-(time.monotonic()-start)
+                 )
+             )

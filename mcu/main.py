@@ -39,6 +39,9 @@ def init_serial():
   else:
     _serial = busio.UART(data_source[1], data_source[0],
                          baudrate=115200)
+  _serial.reset_input_buffer()
+  _serial.write(b"READY\n")
+  _serial.flush()
 
 def get_data():
   """ read data from data-source """
@@ -47,8 +50,9 @@ def get_data():
   line = '#'
   cfg = ''
   while line[0] == '#':
-    line = _serial.readline().decode()
-    if line[0] == '#':
+    line = _serial.readline().decode()[:-1]
+    print(f"received: {line}")
+    if line and line[0] == '#':
       # add configuration line to config (skip comments)
       if line[1:] and line[1:][0] != '#':
         cfg += line[1:]
@@ -57,13 +61,25 @@ def get_data():
       break
 
   # process data/configuration
+  if line == "START":
+    # cleanup for restart
+    print("START received, cleaning up")
+    _serial.reset_input_buffer()
+    config_ui.view = None
+    _serial.write(b"READY\n")
+    _serial.flush()
+    return []
+
   if cfg:
     # update configuration and ui-objects
+    print("updating UI configuration from host")
     config_ui.parse(cfg)
     config_ui.create_view()
     _serial.write(b"READY\n")
     _serial.flush()
+    return []
   elif not config_ui.view:
+    print("using default UI configuration")
     # received data line without initial ui-configuration, use default
     config_ui.create_view()
     # catch up with the host
@@ -78,13 +94,16 @@ def get_data():
 # --- main loop   ------------------------------------------------------------
 
 init_serial()
+print("waiting for data...")
+ts_old = time.monotonic()
 while True:
-  start = time.monotonic()
-  values = get_data()
+  values, ts = get_data(), time.monotonic()
   if values:
+    print(f"interval: {ts-ts_old:0.1f}")  # show framerate
+    ts_old = ts
     try:
       config_ui.view.set_values(values)
       config.display.refresh()
+      #print(f"refresh:  {time.monotonic()-ts:0.1f}")
     except Exception as ex:
       print(f"display update failed with exception: {ex}")
-  #print(f"{time.monotonic()-start:0.1f}")  # show framerate
