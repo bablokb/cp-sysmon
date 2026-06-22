@@ -55,18 +55,25 @@ def get_data():
     else:
       # a real data line, so break
       break
+
+  # process data/configuration
   if cfg:
     # update configuration and ui-objects
     config_ui.parse(cfg)
     config_ui.create_view()
-    _serial.write(b"READY\r\n")
+    _serial.write(b"READY\n")
     _serial.flush()
+  elif not config_ui.view:
+    # received data line without initial ui-configuration, use default
+    config_ui.create_view()
+    # catch up with the host
+    _serial.reset_input_buffer()
+    return []
 
   # parse data
   data = line.strip('\n').split(',')
   data = [float(d) for d in data]
   return [val for pair in zip([None]*len(data), data) for val in pair]
-  return data
 
 # --- main loop   ------------------------------------------------------------
 
@@ -74,7 +81,10 @@ init_serial()
 while True:
   start = time.monotonic()
   values = get_data()
-  if config_ui.view:
-    config_ui.view.set_values(values)
-    config.display.refresh()
+  if values:
+    try:
+      config_ui.view.set_values(values)
+      config.display.refresh()
+    except Exception as ex:
+      print(f"display update failed with exception: {ex}")
   #print(f"{time.monotonic()-start:0.1f}")  # show framerate
