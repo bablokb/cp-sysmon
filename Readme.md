@@ -49,7 +49,7 @@ routine above creates a default version:
   "BAUD": 115200,
   "CPU_TEMP_LABEL": "CPU",
   "DISK_MOUNTS": ["/"],
-  "INTERVAL": 1,
+  "INTERVAL": 1.5,
   "UI_CONFIG": {
     "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
     "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
@@ -85,8 +85,13 @@ you must also update the `UI_CONFIG` accordingly, i.e. add additional
 items to the given lists.
 
 The `INTERVAL` value defines the data-sampling interval.
-Sampling more often than once per second might lead to problems if the
-MCU cannot process the data in a timely manner.
+Sampling data faster than the MCU is able to process them will result
+in a delayed view of the measurements. You can comment out a line at
+the bottom of `mcu/main.py` to print the update speed of the MCU. A
+Pico (RP2040) with attached ST7789 display can do an update about
+every 1.1-1.2 seconds. You should also keep in mind that short intervals
+also keep the PC busy. So sampling as fast as the MCU can process the
+data is also not the best idea, especially in high load situations.
 
 The `UI_CONFIG` value is a dict that the system sends to the MCU. `labels`
 and `formats` should be self explanatory. `ranges` define the expected
