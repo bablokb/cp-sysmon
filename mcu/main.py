@@ -40,8 +40,10 @@ def init_serial():
     _serial = busio.UART(data_source[1], data_source[0],
                          baudrate=115200)
   _serial.reset_input_buffer()
-  _serial.write(b"READY\n")
+  _serial.write(b"STARTED\n")
   _serial.flush()
+
+# --- read data from serial   -------------------------------------------------
 
 def get_data():
   """ read data from data-source """
@@ -61,9 +63,9 @@ def get_data():
       break
 
   # process data/configuration
-  if line == "START":
-    # cleanup for restart
-    print("START received, cleaning up")
+  if line == "STARTED":
+    # cleanup for (re-) start
+    print("STARTED received, cleaning up")
     _serial.reset_input_buffer()
     config_ui.view = None
     _serial.write(b"READY\n")
@@ -79,11 +81,7 @@ def get_data():
     _serial.flush()
     return []
   elif not config_ui.view:
-    print("using default UI configuration")
-    # received data line without initial ui-configuration, use default
-    config_ui.create_view()
-    # catch up with the host
-    _serial.reset_input_buffer()
+    # configuration not yet available
     return []
 
   # parse data
@@ -93,7 +91,9 @@ def get_data():
 
 # --- main loop   ------------------------------------------------------------
 
+print("initializing")
 init_serial()
+
 print("waiting for data...")
 ts_old = time.monotonic()
 while True:

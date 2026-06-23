@@ -29,7 +29,17 @@ except:
     'TEMP': ('thinkpad', 'CPU'),             # depends on the system
     'DISK_MOUNTS': ['/'],                    # depends on preferences
     'INTERVAL': 1.5,                         # depends on speed of MCU
-    'UI_CONFIG': ''                          # UI configuration
+    'UI_CONFIG':  {                          # UI configuration
+      "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
+      "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
+      "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
+      "colors" : [
+        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]],
+        [["0x008000",65],["0xFFFF00",80],["0xFF0000",None]],
+        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]],
+        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]]
+        ]
+      }
     }
 
 def get_temp():
@@ -51,10 +61,22 @@ def wait_for_mcu(ser):
   print("waiting for MCU...")
   start = time.monotonic()
   while True:
-    resp = ser.readline().decode('utf-8')
-    if resp == "READY\n":
-      print(f"MCU ready after {time.monotonic()-start:0.1f}s")
+    resp = ser.readline().decode('utf-8')[:-1]
+    if resp in ["READY", "STARTED"]:
+      print(f"MCU {resp} after {time.monotonic()-start:0.1f}s")
       return
+
+# --- send configuration   ---------------------------------------------------
+
+def send_configuration(ser):
+  """ send configuration to MCU """
+
+  try:
+    print("sending ui-configuration to MCU...")
+    ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n\n","UTF-8"))
+    wait_for_mcu(ser)
+  except Exception as ex:
+    print(f"failed to write UI_CONFIG: {ex}")
 
 # --- main   -----------------------------------------------------------------
 
@@ -80,22 +102,13 @@ while True:
     time.sleep(0.25)                # give udev time to set permissions
     ser = serial.Serial(port,cfg["BAUD"], timeout=1)
     print(f"serial device created")
-    ser.write(bytes("START\n","UTF-8"))
+    ser.write(bytes("STARTED\n","UTF-8"))
     wait_for_mcu(ser)
-
-    # send UI configuration
-    if cfg["UI_CONFIG"]:
-      try:
-        print("sending ui-configuration to MCU...")
-        ser.write(bytes(f"#{json.dumps(cfg['UI_CONFIG'])}\n\n","UTF-8"))
-        wait_for_mcu(ser)
-      except Exception as ex:
-        print(f"failed to write UI_CONFIG: {ex}")
-    else:
-      # send dummy line and wait
-      print("sending no configuration to MCU...")
-      ser.write(bytes("\n","UTF-8"))
-      wait_for_mcu(ser)
+    send_configuration(ser)
+  elif ser.in_waiting:
+    resp = ser.readline().decode('utf-8')[:-1]
+    if resp == "STARTED":
+      send_configuration(ser)
 
   # query and send data
   data = [f"{psutil.cpu_percent()}",
