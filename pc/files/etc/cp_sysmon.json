@@ -2,8 +2,7 @@
   "#": [
      "Unknown keys are ignored and treated as comments",
      "This json-file reproduces the defaults.",
-     "All keys below are mandatory if this file exists.",
-     "UI_CONFIG can be an empty string for the default configuration."
+     "All keys below are mandatory if this file exists."
        ],
   "BAUD": 115200,
   "TEMP": ["thinkpad", "CPU"],

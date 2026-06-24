@@ -43,11 +43,10 @@ routine above creates a default version:
   "#": [
      "Unknown keys are ignored and treated as comments",
      "This json-file reproduces the defaults.",
-     "All keys below are mandatory if this file exists.",
-     "UI_CONFIG can be an empty string for the default configuration."
+     "All keys below are mandatory if this file exists."
        ],
   "BAUD": 115200,
-  "CPU_TEMP_LABEL": "CPU",
+  "TEMP": ["thinkpad", "CPU"],
   "DISK_MOUNTS": ["/"],
   "INTERVAL": 1.5,
   "UI_CONFIG": {
@@ -76,22 +75,31 @@ run
 
 The output is not very readable but you should identify various components
 of your PC, e.g. NVMe disks, PCIe bridges or the system itself. Check
-which label is most suitable and update `CPU_TEMP_LABEL` within
-`/etc/cp_sysmon.json`.
+which component and label is most suitable and update `TEMP` within
+`/etc/cp_sysmon.json`. The value must be an array with the format
+`[component, label]`.
 
 The second thing to update are the disk-mount(s), unless you are happy with
 the default value. If you have more than a single disk-mount to monitor,
 you must also update the `UI_CONFIG` accordingly, i.e. add additional
 items to the given lists.
 
-The `INTERVAL` value defines the data-sampling interval.
-Sampling data faster than the MCU is able to process them will result
-in a delayed view of the measurements. You can comment out a line at
-the bottom of `mcu/main.py` to print the update speed of the MCU. A
-Pico (RP2040) with attached ST7789 display can do an update about
-every 1.1-1.2 seconds. You should also keep in mind that short intervals
-also keep the PC busy. So sampling as fast as the MCU can process the
-data is also not the best idea, especially in high load situations.
+The `INTERVAL` value defines the data-sampling interval.  Sampling
+data faster than the MCU is able to process them will result in a
+delayed view of the measurements. You can comment out a line at the
+bottom of `mcu/main.py` to print the update speed of the MCU. A Pico
+(RP2040) with attached ST7789 display can do an update about every 0.8
+seconds (this also depends on screen-size and how many values have to
+be displayed).
+
+Since there is a delay at startup while the MCU initializes the
+display, you should use a value that is higher, or else the MCU will
+never catch up. For example with `INTERVAL=1` it takes about 25s until
+the MCU shows live data.
+
+You should also keep in mind that short intervals also keep the PC
+busy. So sampling as fast as the MCU can process the data is also not
+the best idea, especially in high load situations.
 
 The `UI_CONFIG` value is a dict that the system sends to the MCU. `labels`
 and `formats` should be self explanatory. `ranges` define the expected
