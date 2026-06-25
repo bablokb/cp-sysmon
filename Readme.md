@@ -46,9 +46,10 @@ routine above creates a default version:
      "All keys below are mandatory if this file exists."
        ],
   "BAUD": 115200,
+  "INTERVAL": 1.5,
+  "SENSORS":  ["cpu", "temp", "mem", "disks"],
   "TEMP": ["thinkpad", "CPU"],
   "DISK_MOUNTS": ["/"],
-  "INTERVAL": 1.5,
   "UI_CONFIG": {
     "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
     "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],

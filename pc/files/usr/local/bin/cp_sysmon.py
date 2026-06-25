@@ -17,6 +17,8 @@ import serial
 import sys
 import time
 
+import sensors
+
 # --- read configuration from /etc/cp_sysmon.json   -------------------------
 
 try:
@@ -25,11 +27,12 @@ try:
   f.close()
 except:
   cfg = {
-    'BAUD': 115200,                          # communication speed on serial
-    'TEMP': ('thinkpad', 'CPU'),             # depends on the system
-    'DISK_MOUNTS': ['/'],                    # depends on preferences
-    'INTERVAL': 1.5,                         # depends on speed of MCU
-    'UI_CONFIG':  {                          # UI configuration
+    'BAUD': 115200,                             # communication speed on serial
+    'INTERVAL': 1.5,                            # depends on speed of MCU
+    'SENSORS': ["cpu", "temp", "mem", "disks"], # sensor to use
+    'TEMP': ('thinkpad', 'CPU'),                # depends on the system
+    'DISK_MOUNTS': ['/'],                       # depends on preferences
+    'UI_CONFIG':  {                             # UI configuration
       "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
       "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
       "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
@@ -41,18 +44,6 @@ except:
         ]
       }
     }
-
-def get_temp():
-  """ return CPU-temperature """
-  try:
-    name, label = cfg["TEMP"]
-    component = psutil.sensors_temperatures()[name]
-    for value in component:
-      if value.label == label:
-        return int(round(value.current,0))
-    return 0
-  except:
-    return 0
 
 # --- wait for MCU   ---------------------------------------------------------
 
@@ -87,9 +78,10 @@ else:
   port = sys.argv[1]
   if not port.startswith('/dev'):
     port = f"/dev/{port}"
-
 print(f"using port {port}")
 ser = None
+
+sensors = sensors.Sensors(cfg)
 while True:
   start = time.monotonic()
   # wait for serial device
@@ -111,11 +103,10 @@ while True:
       send_configuration(ser)
 
   # query and send data
-  data = [f"{psutil.cpu_percent()}",
-          f"{get_temp()}",
-          f"{psutil.virtual_memory().percent}"]
-  for mnt in cfg["DISK_MOUNTS"]:
-    data.append(f"{psutil.disk_usage(mnt).percent}")
+  data = []
+  for name in cfg["SENSORS"]:
+    data.extend(sensors.get_data(name))
+
   #print(f"{data=}")
   try:
     ser.write(bytes(f"{','.join(data)}\n",'UTF-8'))
