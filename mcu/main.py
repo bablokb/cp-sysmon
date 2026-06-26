@@ -13,6 +13,8 @@
 # Website: https://github.com/bablokb/cp-sysmon
 # ----------------------------------------------------------------------------
 
+DEBUG = False
+
 import busio
 import time
 
@@ -22,7 +24,14 @@ import config
 from uiconfig import UIConfig
 config_ui = UIConfig()             # single global UI configuration object
 
-# --- helpers for system statistics   ----------------------------------------
+# --- print debug message   --------------------------------------------------
+
+def debug(msg):
+  """ print debug message """
+  if DEBUG:
+    print(msg)
+
+# --- initialize serial interface   ------------------------------------------
 
 _serial = None
 data_source = getattr(config,"DATA_SOURCE","usb")
@@ -53,7 +62,7 @@ def get_data():
   cfg = ''
   while line[0] == '#':
     line = _serial.readline().decode()[:-1]
-    print(f"received: {line}")
+    debug(f"received: {line}")
     if line and line[0] == '#':
       # add configuration line to config (skip comments)
       if line[1:] and line[1:][0] != '#':
@@ -65,7 +74,7 @@ def get_data():
   # process data/configuration
   if line == "STARTED":
     # cleanup for (re-) start
-    print("STARTED received, cleaning up")
+    debug("STARTED received, cleaning up")
     _serial.reset_input_buffer()
     config_ui.view = None
     _serial.write(b"READY\n")
@@ -74,7 +83,7 @@ def get_data():
 
   if cfg:
     # update configuration and ui-objects
-    print("updating UI configuration from host")
+    debug("updating UI configuration from host")
     config_ui.parse(cfg)
     config_ui.create_view()
     _serial.write(b"READY\n")
@@ -91,19 +100,19 @@ def get_data():
 
 # --- main loop   ------------------------------------------------------------
 
-print("initializing")
+debug("initializing")
 init_serial()
 
-print("waiting for data...")
+debug("waiting for data...")
 ts_old = time.monotonic()
 while True:
   values, ts = get_data(), time.monotonic()
   if values:
-    print(f"interval: {ts-ts_old:0.1f}")  # show framerate
+    debug(f"interval: {ts-ts_old:0.1f}")  # show framerate
     ts_old = ts
     try:
       config_ui.view.set_values(values)
       config.display.refresh()
-      #print(f"refresh:  {time.monotonic()-ts:0.1f}")
+      debug(f"refresh:  {time.monotonic()-ts:0.1f}")
     except Exception as ex:
-      print(f"display update failed with exception: {ex}")
+      debug(f"display update failed with exception: {ex}")
