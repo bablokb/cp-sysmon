@@ -47,7 +47,7 @@ class Sensors:
     [user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice]
     """
     cpu_time_percent = psutil.cpu_times_percent()
-    return [getattr(cpu_time_percent,info,0) for
+    return [getattr(cpu_time_percent,info,0)
             for info in self._config["CPU_DETAILS"]]
 
   # --- return cpu frequency   -----------------------------------------------
@@ -65,16 +65,16 @@ class Sensors:
   # --- return system temperature   ------------------------------------------
 
   def _temp(self, _):
-  """ return system temperature """
-  try:
-    name, label = self._config["TEMP"]
-    component = psutil.sensors_temperatures()[name]
-    for value in component:
-      if value.label == label:
-        return [int(round(value.current,0))]
-    return [0]
-  except:
-    return [0]
+    """ return system temperature """
+    try:
+      name, label = self._config["TEMP"]
+      component = psutil.sensors_temperatures()[name]
+      for value in component:
+        if value.label == label:
+          return [int(round(value.current,0))]
+      return [0]
+    except:
+      return [0]
 
   # --- return memory usage   ------------------------------------------------
 
