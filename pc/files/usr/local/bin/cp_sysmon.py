@@ -53,6 +53,7 @@ def wait_for_mcu(ser):
   start = time.monotonic()
   while True:
     resp = ser.readline().decode('utf-8')[:-1]
+    print(f"{resp=}")
     if resp in ["READY", "STARTED"]:
       print(f"MCU {resp} after {time.monotonic()-start:0.1f}s")
       return
@@ -97,22 +98,41 @@ while True:
     ser.write(bytes("STARTED\n","UTF-8"))
     wait_for_mcu(ser)
     send_configuration(ser)
-  elif ser.in_waiting:
-    resp = ser.readline().decode('utf-8')[:-1]
-    if resp == "STARTED":
-      send_configuration(ser)
+  else:
+    try:
+      if ser.in_waiting:
+        resp = ser.readline().decode('utf-8')[:-1]
+        if resp == "STARTED":
+          send_configuration(ser)
+    except OSError as osex:
+      print(f"OSerror {osex} for serial (MCU removed?).")
+      try:
+        ser.close()
+      except:
+        pass
+      finally:
+        ser = None
+        continue
 
   # query and send data
   data = []
   for name in cfg["SENSORS"]:
-    data.extend(sensors.get_data(name))
+    data.extend([f"{value}" for value in sensors.get_data(name)])
 
-  #print(f"{data=}")
+  print(f"{data=}")
   try:
     ser.write(bytes(f"{','.join(data)}\n",'UTF-8'))
-  except:
-    ser.close()
-    ser = None
+  except OSError as osex:
+    print(f"OSerror {osex} for serial (MCU removed?).")
+    try:
+      ser.close()
+    except:
+      pass
+    finally:
+      ser = None
+      continue
+  except Exception as ex:
+    print(f"sending data failed with {ex} for: {data=}")
   time.sleep(max(0,
                  cfg["INTERVAL"]-(time.monotonic()-start)
                  )
