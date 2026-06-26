@@ -45,6 +45,7 @@ routine above creates a default version:
      "This json-file reproduces the defaults.",
      "All keys below are mandatory if this file exists."
        ],
+  "DEBUG": false,
   "BAUD": 115200,
   "INTERVAL": 1.5,
   "SENSORS":  ["cpu", "temp", "mem", "disks"],
