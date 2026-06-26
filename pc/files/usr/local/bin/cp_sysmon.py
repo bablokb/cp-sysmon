@@ -21,32 +21,26 @@ import sensors
 
 # --- read configuration from /etc/cp_sysmon.json   -------------------------
 
+# fill defaults
+cfg = {
+  'DEBUG': False,                             # output debug messages
+  'BAUD': 115200,                             # communication speed on serial
+  'INTERVAL': 1.5,                            # depends on speed of MCU
+  'SENSORS': ["cpu", "temp", "mem", "disks"], # sensor to use
+  'TEMP': ('thinkpad', 'CPU'),                # depends on the system
+  'DISK_MOUNTS': ['/'],                       # depends on preferences
+  }
+
 try:
   f = open("/etc/cp_sysmon.json")
-  cfg = json.load(f)
+  cfg_new = json.load(f)
   f.close()
-  if not 'DEBUG' in cfg:
-    cfg['DEBUG'] = False
+  cfg.update(cfg_new)  # update cfg dict
 except:
-  cfg = {
-    'DEBUG': False,                             # output debug messages
-    'BAUD': 115200,                             # communication speed on serial
-    'INTERVAL': 1.5,                            # depends on speed of MCU
-    'SENSORS': ["cpu", "temp", "mem", "disks"], # sensor to use
-    'TEMP': ('thinkpad', 'CPU'),                # depends on the system
-    'DISK_MOUNTS': ['/'],                       # depends on preferences
-    'UI_CONFIG':  {                             # UI configuration
-      "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
-      "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
-      "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
-      "colors" : [
-        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]],
-        [["0x008000",65],["0xFFFF00",80],["0xFF0000",None]],
-        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]],
-        [["0x008000",70],["0xFFFF00",85],["0xFF0000",None]]
-        ]
-      }
-    }
+  pass
+
+sensors = sensors.Sensors(cfg)
+sensors.update_ui_config()
 
 # --- print debug message   --------------------------------------------------
 
@@ -92,7 +86,6 @@ else:
 debug(f"using port {port}")
 ser = None
 
-sensors = sensors.Sensors(cfg)
 while True:
   start = time.monotonic()
   # wait for serial device
@@ -129,10 +122,7 @@ while True:
         continue
 
   # query and send data
-  data = []
-  for name in cfg["SENSORS"]:
-    data.extend([f"{value}" for value in sensors.get_data(name)])
-
+  data = sensors.get_data()
   debug(f"{data=}")
   try:
     ser.write(bytes(f"{','.join(data)}\n",'UTF-8'))
