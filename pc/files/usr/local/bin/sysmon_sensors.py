@@ -165,7 +165,9 @@ class Sensors:
       return {"label": [f"Dsk: {mnt}" for mnt in self._config["DISK_MOUNTS"]],
               "format": ["{0:.1f}%"]*n_disks,
               "range": [[0,100],]*n_disks,
-              "colors": [("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]*n_disks
+              "colors": [
+                [("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]
+                ]*n_disks
               }
     else:
       return [psutil.disk_usage(mnt).percent
