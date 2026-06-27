@@ -17,7 +17,7 @@ import serial
 import sys
 import time
 
-import sensors
+from sysmon_sensors import Sensors
 
 # --- read configuration from /etc/cp_sysmon.json   -------------------------
 
@@ -39,7 +39,7 @@ try:
 except:
   pass
 
-sensors = sensors.Sensors(cfg)
+sensors = Sensors(cfg)
 sensors.update_ui_config()
 
 # --- print debug message   --------------------------------------------------

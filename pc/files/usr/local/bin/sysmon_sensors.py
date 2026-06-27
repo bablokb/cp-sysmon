@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# sensors.py: collection of data-sampling wrappers.
+# sysmon_sensors.py: collection of data-sampling wrappers.
 #
 # Each wrapper will create a list of values, even if the list is only a
 # single item.
