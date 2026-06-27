@@ -26,18 +26,23 @@ cfg = {
   'DEBUG': False,                             # output debug messages
   'BAUD': 115200,                             # communication speed on serial
   'INTERVAL': 1.5,                            # depends on speed of MCU
-  'SENSORS': ["cpu", "temp", "mem", "disks"], # sensor to use
-  'TEMP': ('thinkpad', 'CPU'),                # depends on the system
-  'DISK_MOUNTS': ['/'],                       # depends on preferences
+  'SENSORS': ["cpu", "freq", "temp", "mem"],  # sensor to use
+  # sensor specific config needs a dict
+  # with the same name as the sensor
+  'temp': {
+    'name': 'thinkpad',                       # depends on the system
+    'label': 'CPU'
+    },
+  'disks': {
+    'mounts': ['/'],                          # depends on preferences
+    },
   }
 
-try:
+if os.path.exists("/etc/cp_sysmon.json"):
   f = open("/etc/cp_sysmon.json")
   cfg_new = json.load(f)
   f.close()
   cfg.update(cfg_new)  # update cfg dict
-except:
-  pass
 
 sensors = Sensors(cfg)
 sensors.update_ui_config()

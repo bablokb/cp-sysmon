@@ -46,12 +46,30 @@ class Sensors:
     colors  = []
     for sensor in cfg['SENSORS']:
       ui_cfg = getattr(self,f"_{sensor}")(ui_config=True)
-      labels.extend(ui_cfg["label"])
-      formats.extend(ui_cfg["format"])
-      ranges.extend(ui_cfg["range"])
-      colors.extend(ui_cfg["colors"])
+      labels.append(ui_cfg["label"])
+      formats.append(ui_cfg["format"])
+      ranges.append(ui_cfg["range"])
+      colors.append(ui_cfg["colors"])
 
-    # keep existing configurations from global config-file
+    # override with sensor-specific values from global config-file
+    for index, sensor in enumerate(cfg['SENSORS']):
+      cfg_sensor = cfg.get(sensor)
+      if not cfg_sensor:
+        continue
+      for attr in ['labels', 'formats', 'ranges', 'colors']:
+        value = cfg_sensor.get(attr)
+        if not value:
+          continue
+        if isinstance(value,list):
+          # json does not suppor tuples, so convert lists
+          value = tuple(value)
+        locals()[attr][index] = value
+
+    # flatten lists and combine them to MCU-compatible format
+    labels  = self._flatten(labels)
+    formats = self._flatten(formats)
+    ranges  = self._flatten(ranges)
+    colors  = self._flatten(colors)
     if "UI_CONFIG" not in cfg:
       cfg["UI_CONFIG"] = {}
     if not "labels" in cfg["UI_CONFIG"]:
@@ -63,15 +81,28 @@ class Sensors:
     if not "colors" in cfg["UI_CONFIG"]:
       cfg["UI_CONFIG"]["colors"]  = colors
 
+  # --- helper: flatten list with elements/sublists   ------------------------
+
+  def _flatten(self, inlist):
+    """ flatten list with elements/sublists """
+    outlist = []
+    for list_or_elem in inlist:
+      if isinstance(list_or_elem,(list,tuple)):
+        for elem in list_or_elem:
+          outlist.append(elem)
+      else:
+        outlist.append(list_or_elem)
+    return outlist
+
   # --- return cpu percent   -------------------------------------------------
 
   def _cpu(self, ui_config=False):
     """ return CPU """
     if ui_config:
-      return {"label": ["CPU:"],
-              "format": ["{0:.1f}%"],
-              "range": [[0,100]],
-              "colors": [[("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]]
+      return {"label": "CPU:",
+              "format": "{0:.1f}%",
+              "range": [(0,100)],
+              "colors": [(("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)]
               }
     else:
       return [psutil.cpu_percent()]
@@ -101,10 +132,11 @@ class Sensors:
       cpu_freq = psutil.cpu_freq()
       green = int(cpu_freq.min + 0.5*(cpu_freq.max-cpu_freq.min))  # at 50% of range
       orange = int(cpu_freq.min + 0.8*(cpu_freq.max-cpu_freq.min)) # at 80% of range
-      return {"label": ["Freq:"],
-              "format": ["{0:4.0f}"],
-              "range": [[cpu_freq.min,cpu_freq.max]],
-              "colors": [[("0x008000",green),("0xFFFF00",orange),("0xFF0000",None)]]
+      return {"label": "Freq:",
+              "format": "{0:4.0f}",
+              "range": [(cpu_freq.min,cpu_freq.max)],
+              "colors": [
+                (("0x008000",green),("0xFFFF00",orange),("0xFF0000",None),)]
               }
     else:
       return [int(psutil.cpu_freq().current)]
@@ -116,8 +148,8 @@ class Sensors:
     if ui_config:
       return {"label": ["Load:"],
               "format": ["{0:.1f}"],
-              "range": [[0,100]],
-              "colors": [[("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]]
+              "range": [(0,100)],
+              "colors": [(("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)]
               }
     else:
       return [load for load in psutil.getloadavg()]
@@ -129,12 +161,13 @@ class Sensors:
     if ui_config:
       return {"label": ["Temp:"],
               "format": ["{0}°C"],
-              "range": [[35,85]],
-              "colors": [[("0x008000",65),("0xFFFF00",80),("0xFF0000",None)]]
+              "range": [(35,85)],
+              "colors": [(("0x008000",65),("0xFFFF00",80),("0xFF0000",None),)]
               }
     else:
       try:
-        name, label = self._config["TEMP"]
+        name = self._config["temp"]["name"]
+        label = self._config["temp"]["label"]
         component = psutil.sensors_temperatures()[name]
         for value in component:
           if value.label == label:
@@ -150,8 +183,8 @@ class Sensors:
     if ui_config:
       return {"label": ["Mem:"],
               "format": ["{0:.1f}%"],
-              "range": [[0,100]],
-              "colors": [[("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]]
+              "range": [(0,100)],
+              "colors": [(("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)]
               }
     else:
       return [psutil.virtual_memory().percent]
@@ -161,14 +194,20 @@ class Sensors:
   def _disks(self, ui_config=False):
     """ return used disk-space """
     if ui_config:
-      n_disks = len(self._config["DISK_MOUNTS"])
-      return {"label": [f"Dsk: {mnt}" for mnt in self._config["DISK_MOUNTS"]],
+      if "disks" not in self._config:
+        self._config["disks"] = {}
+      if "mounts" not in self._config["disks"]:
+        self._config["disks"]["mounts"] = ["/"]
+
+      mounts = self._config["disks"]["mounts"]
+      n_disks = len(mounts)
+      return {"label": [f"{mnt}:" for mnt in mounts],
               "format": ["{0:.1f}%"]*n_disks,
-              "range": [[0,100],]*n_disks,
+              "range": [(0,100)]*n_disks,
               "colors": [
-                [("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]
+                (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)
                 ]*n_disks
               }
     else:
       return [psutil.disk_usage(mnt).percent
-              for mnt in self._config["DISK_MOUNTS"]]
+              for mnt in self._config["disks"]["mounts"]]
