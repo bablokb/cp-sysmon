@@ -12,6 +12,7 @@ from dataviews.Base import Color
 
 # --- basic configuration (optional)   ---------------------------------------
 
+#DEBUG     = False
 #FONT      = "fonts/DejaVuSans-16-subset.bdf"
 #BG_COLOR  = Color.BLACK
 #TXT_COLOR = Color.AQUA

@@ -13,8 +13,6 @@
 # Website: https://github.com/bablokb/cp-sysmon
 # ----------------------------------------------------------------------------
 
-DEBUG = False
-
 import busio
 import time
 
@@ -28,7 +26,7 @@ config_ui = UIConfig()             # single global UI configuration object
 
 def debug(msg):
   """ print debug message """
-  if DEBUG:
+  if getattr(config,"DEBUG",False):
     print(msg)
 
 # --- initialize serial interface   ------------------------------------------
