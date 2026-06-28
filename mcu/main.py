@@ -106,11 +106,12 @@ ts_old = time.monotonic()
 while True:
   values, ts = get_data(), time.monotonic()
   if values:
-    debug(f"interval: {ts-ts_old:0.1f}")  # show framerate
+    elapsed = ts-ts_old
     ts_old = ts
     try:
       config_ui.view.set_values(values)
       config.display.refresh()
-      debug(f"refresh:  {time.monotonic()-ts:0.1f}")
+      debug(f"timing total: {elapsed:0.1f}s, " +
+            f"ui-refresh: {time.monotonic()-ts:0.1f}s")
     except Exception as ex:
       debug(f"display update failed with exception: {ex}")
