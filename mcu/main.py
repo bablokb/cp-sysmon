@@ -111,7 +111,7 @@ while True:
     try:
       config_ui.view.set_values(values)
       config.display.refresh()
-      debug(f"timing total: {elapsed:0.1f}s, " +
-            f"ui-refresh: {time.monotonic()-ts:0.1f}s")
+      debug(f"timing: {elapsed:0.1f}s/{time.monotonic()-ts:0.1f}s " +
+            "(total/ui-refresh)")
     except Exception as ex:
       debug(f"display update failed with exception: {ex}")
