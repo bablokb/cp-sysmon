@@ -14,17 +14,18 @@ presentation work.
 PC-Installation
 ---------------
 
-The PC-script needs the Python package `psutil` to collect performance
-data like free memory, disk space or CPU-temperature. Install this
-package either using your package-manager or with pip.
+As a prerequisite the datacollector-script needs the Python package
+`psutil` to collect performance data like free memory, disk space or
+CPU-temperature. Install this package either using your
+package-manager or with pip.
 
-If you are running Linux, use:
+Afterwards, if you are running Linux, use:
 
     git clone https://github.com/bablokb/cp-sysmon
     cd cp-sysmon
     sudo pc/tools/install
 
-to install the script, an udev-rule and a systemd-service. The latter
+to install the datacollector, an udev-rule and a systemd-service. The latter
 two are not strictly necessary, but they automatically start the
 PC-script whenever a suitable MCU is plugged in. The script is copied
 to `/usr/local/bin/cp_sysmon.py`, the udev-rule to
@@ -40,79 +41,34 @@ routine above creates a default version:
 
 ```
 {
-  "#": [
+  "#1": [
      "Unknown keys are ignored and treated as comments",
-     "This json-file reproduces the defaults.",
-     "All keys below are mandatory if this file exists."
+     "This json-file reproduces the defaults."
        ],
   "DEBUG": false,
-  "BAUD": 115200,
   "INTERVAL": 1.5,
-  "SENSORS":  ["cpu", "temp", "mem", "disks"],
-  "TEMP": ["thinkpad", "CPU"],
-  "DISK_MOUNTS": ["/"],
-  "UI_CONFIG": {
-    "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
-    "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
-    "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
-    "colors" : [
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
-      [["0x008000",65],["0xFFFF00",80],["0xFF0000",null]],
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]]
-    ]
-  }
+  "SENSORS": ["cpu", "freq", "temp", "mem"],
+  "#2": [
+     "sensors with specific configs need a dict",
+     "with the same name as the sensor"
+       ],
+  "temp": {
+    "#": "name and label depend on the system and must be changed",
+    "name": "thinkpad",
+    "label": "CPU"
+    },
+  "disks": {
+    "#": [
+      "'mounts' depends on preferences. Must be a list,",
+      "Note that the SENSORS configuration does not contain 'disks' by default"
+        ],
+    "mounts": ["/"]
+    },
 }
-
 ```
 
-Although psutil hides most of the specifics of performance data, there is
-one important exception: CPU-temperature. A PC has many sensors and the
-exact label of the CPU-temperature varies. To find out the correct label,
-run
-
-    python3
-    >>> import psutil
-    >>> psutil.sensors_temperature()
-
-The output is not very readable but you should identify various components
-of your PC, e.g. NVMe disks, PCIe bridges or the system itself. Check
-which component and label is most suitable and update `TEMP` within
-`/etc/cp_sysmon.json`. The value must be an array with the format
-`[component, label]`.
-
-The second thing to update are the disk-mount(s), unless you are happy with
-the default value. If you have more than a single disk-mount to monitor,
-you must also update the `UI_CONFIG` accordingly, i.e. add additional
-items to the given lists.
-
-The `INTERVAL` value defines the data-sampling interval.  Sampling
-data faster than the MCU is able to process them will result in a
-delayed view of the measurements. You can comment out a line at the
-bottom of `mcu/main.py` to print the update speed of the MCU. A Pico
-(RP2040) with attached ST7789 display can do an update about every 0.8
-seconds (this also depends on screen-size and how many values have to
-be displayed).
-
-Since there is a delay at startup while the MCU initializes the
-display, you should use a value that is higher, or else the MCU will
-never catch up. For example with `INTERVAL=1` it takes about 25s until
-the MCU shows live data.
-
-You should also keep in mind that short intervals also keep the PC
-busy. So sampling as fast as the MCU can process the data is also not
-the best idea, especially in high load situations.
-
-The `UI_CONFIG` value is a dict that the system sends to the MCU. `labels`
-and `formats` should be self explanatory. `ranges` define the expected
-ranges for values and are used for scaling the visual representation.
-`colors` are lists that map values to colors: e.g. (first line):
-a cpu-value of up to 70% is mapped to "0x008000" (green), values between
-70% and 85% are mapped to "0xFFFF00" (yellow) and values above are
-mapped to red ("0xFF0000").
-
-Note that if you add more statistics (besides more disk-mounts) you also
-have to adapt the collector script (see section "Hacking" below).
+Details about available sensors and on how to configure them are in
+the file [`pc-config.md`](./pc-config.md).
 
 
 Configuring Automatic Start
@@ -182,21 +138,12 @@ data.
 Hacking
 -------
 
-The current implementation only collects a few core performance data. You
-can change the collector and mcu script to collect and display more
-endpoints.
+The current implementation only collects a few core performance
+endpoints. You can change the collector to collect and display more
+values. On MCU side, there should be nothing to do.
 
-In the collector script (`/usr/local/bin/cp_sysmon.py`), just add more
-items to the data-object:
-
-    data = [f"{psutil.cpu_percent()}",
-            f"{get_temp()}",
-            f"{psutil.virtual_memory().percent}"]
-    for mnt in cfg.DISK_MOUNTS:
-      data.append(f"{psutil.disk_usage(mnt).percent}")
-
-Adding more endpoints also needs an adaption of `UI_CONFIG` in
-`/etc/cp_sysmon.json` as described above.
+All endpoints (sensors) are defined within
+[`pc/files/usr/local/bin/sysmon_sensors.py`](pc/files/usr/local/bin/sysmon_sensors.py). Use one of the existing sensors as a blueprint.
 
 Another option would be to add data-logging. Many displays already have
 an integrated SD-card slot, so besides live display of performance data
