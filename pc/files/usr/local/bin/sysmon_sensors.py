@@ -66,20 +66,11 @@ class Sensors:
         locals()[attr][index] = value
 
     # flatten lists and combine them to MCU-compatible format
-    labels  = self._flatten(labels)
-    formats = self._flatten(formats)
-    ranges  = self._flatten(ranges)
-    colors  = self._flatten(colors)
-    if "UI_CONFIG" not in cfg:
-      cfg["UI_CONFIG"] = {}
-    if not "labels" in cfg["UI_CONFIG"]:
-      cfg["UI_CONFIG"]["labels"]  = labels
-    if not "formats" in cfg["UI_CONFIG"]:
-      cfg["UI_CONFIG"]["formats"] = formats
-    if not "ranges" in cfg["UI_CONFIG"]:
-      cfg["UI_CONFIG"]["ranges"]  = ranges
-    if not "colors" in cfg["UI_CONFIG"]:
-      cfg["UI_CONFIG"]["colors"]  = colors
+    cfg["UI_CONFIG"] = {}
+    cfg["UI_CONFIG"]["labels"]  = self._flatten(labels)
+    cfg["UI_CONFIG"]["formats"] = self._flatten(formats)
+    cfg["UI_CONFIG"]["ranges"]  = self._flatten(ranges)
+    cfg["UI_CONFIG"]["colors"]  = self._flatten(colors)
 
   # --- helper: flatten list with elements/sublists   ------------------------
 
