@@ -1,24 +1,25 @@
 {
-  "#": [
+  "#1": [
      "Unknown keys are ignored and treated as comments",
-     "This json-file reproduces the defaults.",
-     "All keys below are mandatory if this file exists."
+     "This json-file reproduces the defaults."
        ],
   "DEBUG": false,
-  "BAUD": 115200,
   "INTERVAL": 1.5,
-  "SENSORS": ["cpu", "temp", "mem", "disks"],
-  "TEMP": ["thinkpad", "CPU"],
-  "DISK_MOUNTS": ["/"],
-  "UI_CONFIG": {
-    "labels" : ["CPU:",     "Temp:", "Mem:",     "Disk:"],
-    "formats": ["{0:.1f}%", "{0}°C", "{0:.1f}%", "{0:.1f}%"],
-    "ranges" : [[0,100],    [35,85], [0,100],    [0,100]],
-    "colors" : [
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
-      [["0x008000",65],["0xFFFF00",80],["0xFF0000",null]],
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]],
-      [["0x008000",70],["0xFFFF00",85],["0xFF0000",null]]
-    ]
-  }
+  "SENSORS": ["cpu", "freq", "temp", "mem"],
+  "#2": [
+     "sensors with specific configs need a dict",
+     "with the same name as the sensor"
+       ],
+  "temp": {
+    "#": "name and label depend on the system and must be changed",
+    "name": "thinkpad",
+    "label": "CPU"
+    },
+  "disks": {
+    "#": [
+      "'mounts' depends on preferences. Must be a list,",
+      "Note that the SENSORS configuration does not contain 'disks' by default"
+        ],
+    "mounts": ["/"]
+    },
 }
