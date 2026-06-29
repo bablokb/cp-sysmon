@@ -114,15 +114,34 @@ class Sensors:
     [user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice]
     """
     if ui_config:
-      return {"label": ["CPU:"],
-              "format": ["{0:.1f}%"],
-              "range": [[0,100]],
-              "colors": [[("0x008000",70),("0xFFFF00",85),("0xFF0000",None)]]
+      if "cpu_detail" not in self._config:
+        self._config["cpu_detail"] = {}
+      if "categories" not in self._config["cpu_detail"]:
+        self._config["cpu_detail"]["categories"] = [
+          "user", "system", "idle", "iowait"]
+      categories = self._config["cpu_detail"]["categories"]
+      n_cats = len(categories)
+      def_colors = {
+        "user": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),),
+        "nice": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),),
+        "system": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),),
+        "idle": (("0xFF0000",10),("0xFFFF00",20),("0x008000",None),),
+        "iowait": (("0x008000",5),("0xFFFF00",15),("0xFF0000",None),),
+        "irq": (("0x008000",5),("0xFFFF00",15),("0xFF0000",None),),
+        "softirq": (("0x008000",5),("0xFFFF00",15),("0xFF0000",None),),
+        "steal": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),),
+        "guest": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),),
+        "guest_nice": (("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)
+        }
+      return {"label": [cat for cat in categories],
+              "format": ["{0:.1f}%"]*n_cats,
+              "range":  [(0,100)]*n_cats,
+              "colors": [def_colors[cat] for cat in categories]
               }
     else:
       cpu_time_percent = psutil.cpu_times_percent()
-      return [getattr(cpu_time_percent,info,0)
-              for info in self._config["CPU_DETAILS"]]
+      return [getattr(cpu_time_percent,cat,0)
+              for cat in self._config["cpu_detail"]["categories"]]
 
   # --- return cpu frequency   -----------------------------------------------
 
@@ -146,10 +165,12 @@ class Sensors:
   def _load(self, ui_config=False):
     """ return CPU load """
     if ui_config:
-      return {"label": ["Load:"],
-              "format": ["{0:.1f}"],
-              "range": [(0,100)],
-              "colors": [(("0x008000",70),("0xFFFF00",85),("0xFF0000",None),)]
+      n_cpus = psutil.cpu_count()
+      return {"label": ["L 1m:", "L 5m:","L 15m:",],
+              "format": ["{0:.2f}"]*3,
+              "range": [(0,3*n_cpus)]*3,
+              "colors": [(("0x008000",n_cpus),
+                          ("0xFFFF00",1.5*n_cpus),("0xFF0000",None),)]*3
               }
     else:
       return [load for load in psutil.getloadavg()]
