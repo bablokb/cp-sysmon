@@ -11,9 +11,10 @@
      "with the same name as the sensor"
        ],
   "temp": {
-    "#": "name and label depend on the system and must be changed",
-    "name": "thinkpad",
-    "label": "CPU"
+    "#": ["name and label depend on the system and must be changed",
+          "Pi systems (tested on Pi5 and CM4) use these defaults:"],
+    "name": "cpu_thermal",
+    "label": ""
     },
   "disks": {
     "#": [
