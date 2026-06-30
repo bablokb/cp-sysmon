@@ -16,8 +16,10 @@ PC-Installation
 
 As a prerequisite the datacollector-script needs the Python package
 `psutil` to collect performance data like free memory, disk space or
-CPU-temperature. Install this package either using your
-package-manager or with pip.
+CPU-temperature. In addition, the `pyserial` package is needed. If the
+system supports Debian-packages, the install program takes care of
+installing these prereqs. Otherwise, install the packages either using
+your package-manager or with pip.
 
 Afterwards, if you are running Linux, use:
 
