@@ -28,6 +28,11 @@ install_files() {
     # save current configuration
     mv /etc/${PROJECT}.json /etc/${PROJECT}.json.$rand
   fi
+  if [ -f /etc/udev/rules.d/99-$PROJECT.rules ]; then
+    # save current udev-rule
+    mv /etc/udev/rules.d/99-$PROJECT.rules \
+                                    /etc/udev/rules.d/99-$PROJECT.rules.$rand
+  fi
 
   for f in `find $(dirname "$0")/../files/ -type f -not -name "*.pyc"`; do
     target="${f#*files}"
@@ -47,6 +52,13 @@ install_files() {
     mv -f /etc/${PROJECT}.json /etc/${PROJECT}.json.new
     mv /etc/${PROJECT}.json.$rand /etc/${PROJECT}.json
     echo -e "\nnew version of configuration file: /etc/${PROJECT}.json.new"
+  fi
+  if [ -f /etc/udev/rules.d/99-$PROJECT.rules.$rand ]; then
+    mv -f /etc/udev/rules.d/99-$PROJECT.rules \
+                                /etc/udev/rules.d/99-$PROJECT.rules.new
+    mv /etc/udev/rules.d/99-$PROJECT.rules.$rand \
+                                    /etc/udev/rules.d/99-$PROJECT.rules
+    echo -e "\nnew version of udev-rule: /etc/udev/rules.d/99-$PROJECT.rules.new"
   fi
 }
 
