@@ -9,6 +9,14 @@
 # ---------------------------------------------------------------------------
 
 PROJECT="cp_sysmon"
+PACKAGES="python3-serial python3-psutil"
+
+# --- basic packages   ------------------------------------------------------
+
+if [ -n "$PACKAGES" ]; then
+  apt-get update
+  apt-get -y install $PACKAGES
+fi
 
 # --- install specific files   ----------------------------------------------
 
